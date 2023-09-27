@@ -1,4 +1,7 @@
 import {
+  checkHorizontalMatch,
+  checkVerticalMatch,
+  constructEffectsForPosition,
   constructIndexOfDesiredPosition,
   matchesExist,
   positionExistsInBoard,
@@ -27,7 +30,7 @@ export type Board<T> = {
 };
 
 export type BoardEvent<T> = {
-  kind: 'Match' | 'Refill';
+  kind: "Match" | "Refill";
   match?: Match<T>;
 };
 
@@ -55,9 +58,9 @@ export function positions(board: Board<any>): Position[] {
 }
 
 export function create<T>(
-    generator: Generator<T>,
-    width: number,
-    height: number
+  generator: Generator<T>,
+  width: number,
+  height: number
 ): Board<T> {
   const board: T[][] = [];
 
@@ -88,9 +91,9 @@ export function piece<T>(board: Board<T>, p: Position): T | undefined {
 }
 
 export function canMove<T>(
-    board: Board<T>,
-    first: Position,
-    second: Position
+  board: Board<T>,
+  first: Position,
+  second: Position
 ): boolean {
   if (positionsAreInTheSameColumnOrRow(first, second)) {
     const piece1 = piece(board, first);
@@ -116,32 +119,29 @@ export function canMove<T>(
 }
 
 export function move<T>(
-    generator: Generator<T>,
-    board: Board<T>,
-    first: Position,
-    second: Position
+  generator: Generator<T>,
+  board: Board<T>,
+  first: Position,
+  second: Position
 ): MoveResult<T> {
   if (!canMove(board, first, second)) {
     return { board, effects: [] };
   }
-  // if (!canMove(board, first, second)) {
-  //   throw new Error("Invalid move");
-  // }
 
-  // const newBoard = {
-  //   ...board,
-  //   board: swapPieces([...board.board], first, second),
-  // };
+  let newBoard = {
+    ...board,
+    board: swapPieces([...board.board], first, second),
+  };
 
-  // const effects: Effect<T>[] = [];
-  // const matchExists = matchesExist(newBoard, first, second);
-  // if (matchExists) {
-  //   const matchedPiece = piece(newBoard, first)!;
-  //   const positions = [first, second];
-  //   effects.push({
-  //     kind: "Match",
-  //     match: { matched: matchedPiece, positions },
-  //   });
+  const effects: Effect<T>[] = [];
+  const matchExists = matchesExist(newBoard, first, second);
+  if (matchExists) {
+    let effectsForFirstPosition = constructEffectsForPosition(newBoard, first);
+    let effectsForSecondPosition = constructEffectsForPosition(newBoard, second);
+    
+    effects.push(...effectsForFirstPosition, ...effectsForSecondPosition);
+  }
+  return { board: newBoard, effects: effects };
 
   //   while (true) {
   //     const cascadeEffects = handleCascadingMatches(generator, newBoard);
@@ -160,8 +160,8 @@ export function move<T>(
 }
 
 function handleCascadingMatches<T>(
-    generator: Generator<T>,
-    board: Board<T>
+  generator: Generator<T>,
+  board: Board<T>
 ): Effect<T>[] {
   const cascadeEffects: Effect<T>[] = [];
   let cascadeOccurred = false;
@@ -171,8 +171,16 @@ function handleCascadingMatches<T>(
       const currentPiece = piece(board, { row, col });
       if (currentPiece === undefined) continue;
 
-      const horizontalMatch = matchesExist(board, { row, col }, { row, col: col + 1 });
-      const verticalMatch = matchesExist(board, { row, col }, { row: row + 1, col });
+      const horizontalMatch = matchesExist(
+        board,
+        { row, col },
+        { row, col: col + 1 }
+      );
+      const verticalMatch = matchesExist(
+        board,
+        { row, col },
+        { row: row + 1, col }
+      );
 
       if (horizontalMatch || verticalMatch) {
         board.board.flat()[row * board.width + col] = undefined;
@@ -185,7 +193,10 @@ function handleCascadingMatches<T>(
         if (verticalMatch) {
           positions.push({ row: row + 1, col });
         }
-        cascadeEffects.push({ kind: "Match", match: { matched: matchedPiece, positions } });
+        cascadeEffects.push({
+          kind: "Match",
+          match: { matched: matchedPiece, positions },
+        });
 
         cascadeOccurred = true;
       }
@@ -193,7 +204,10 @@ function handleCascadingMatches<T>(
   }
 
   if (cascadeOccurred) {
-    cascadeEffects.push({ kind: "Refill", board: refillBoard(generator, board) });
+    cascadeEffects.push({
+      kind: "Refill",
+      board: refillBoard(generator, board),
+    });
   }
 
   return cascadeEffects;
