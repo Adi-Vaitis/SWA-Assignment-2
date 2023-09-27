@@ -122,37 +122,41 @@ export function move<T>(
     second: Position
 ): MoveResult<T> {
   if (!canMove(board, first, second)) {
-    throw new Error("Invalid move");
+    return { board, effects: [] };
   }
+  // if (!canMove(board, first, second)) {
+  //   throw new Error("Invalid move");
+  // }
 
-  const newBoard = {
-    ...board,
-    board: swapPieces([...board.board], first, second),
-  };
+  // const newBoard = {
+  //   ...board,
+  //   board: swapPieces([...board.board], first, second),
+  // };
 
-  const effects: Effect<T>[] = [];
-  const matchExists = matchesExist(newBoard, first, second);
-  if (matchExists) {
-    const matchedPiece = piece(newBoard, first)!;
-    const positions = [first, second];
-    effects.push({
-      kind: "Match",
-      match: { matched: matchedPiece, positions },
-    });
+  // const effects: Effect<T>[] = [];
+  // const matchExists = matchesExist(newBoard, first, second);
+  // if (matchExists) {
+  //   const matchedPiece = piece(newBoard, first)!;
+  //   const positions = [first, second];
+  //   effects.push({
+  //     kind: "Match",
+  //     match: { matched: matchedPiece, positions },
+  //   });
 
-    while (true) {
-      const cascadeEffects = handleCascadingMatches(generator, newBoard);
-      if (cascadeEffects.length > 0) {
-        effects.push(...cascadeEffects);
-      } else {
-        break;
-      }
-    }
-  } else {
-    effects.push({ kind: "Refill", board: refillBoard(generator, newBoard) });
-  }
+  //   while (true) {
+  //     const cascadeEffects = handleCascadingMatches(generator, newBoard);
+  //     if (cascadeEffects.length > 0) {
+  //       effects.push(...cascadeEffects);
+  //     } else {
+  //       break;
+  //     }
+  //   }
+  // } else {
+  //   effects.push({ kind: "Refill", board: refillBoard(generator, newBoard) });
+  // }
 
-  return { board: newBoard, effects };
+  // return { board: newBoard, effects };
+  return undefined;
 }
 
 function handleCascadingMatches<T>(
