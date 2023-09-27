@@ -1,129 +1,107 @@
-import * as Board from "../src/board";
+import { Board, Position } from "./board";
 
-export function constructIndexOfDesiredPosition<T>(
-  board: Board.Board<T>,
-  p: Board.Position
-): number {
-  return p.row * board.width + p.col;
-}
-
-export function constructExpectedValues<T>(board: Board.Board<T>): T[] {
-  let expectedValues: T[] = [];
-  for (let i = 0; i < board.width * board.height; i++) {
-    expectedValues.push(board.generator.next());
-  }
-  return expectedValues;
-}
-
-export function positionExistsInBoard<T>(
-  board: Board.Board<T>,
-  p: Board.Position
-): boolean {
+export function positionExistsInBoard(board: Board<any>, p: Position): boolean {
   return (
-    p.row >= 0 && p.row < board.height && p.col >= 0 && p.col < board.width
+      p.row >= 0 &&
+      p.row < board.height &&
+      p.col >= 0 &&
+      p.col < board.width
   );
 }
 
 export function positionsAreInTheSameColumnOrRow(
-  p1: Board.Position,
-  p2: Board.Position
+    p1: Position,
+    p2: Position
 ): boolean {
   return p1.row === p2.row || p1.col === p2.col;
 }
 
-export function matchesExist<T>(board: Board.Board<T>, p1: Board.Position, p2: Board.Position): boolean {
-    const horizontalMatches: Board.Match<T>[] = [];
-    const verticalMatches: Board.Match<T>[] = [];
-  
-    /// doesnt work needs to make matches correctly 
-    for (let row = 0; row < board.height; row++) {
-      for (let col = 0; col < board.width; col++) {
-        const currentPiece = Board.piece(board, { row, col });
-        if (currentPiece !== undefined) {
-          // Check for horizontal matches
-          if (col < board.width - 2) {
-            const nextPiece1 = Board.piece(board, { row, col: col + 1 });
-            const nextPiece2 = Board.piece(board, { row, col: col + 2 });
-  
-            if (currentPiece === nextPiece1 && currentPiece === nextPiece2) {
-              horizontalMatches.push({
-                matched: currentPiece,
-                positions: [{ row, col }, { row, col: col + 1 }, { row, col: col + 2 }],
-              });
-            }
-          }
-  
-          // Check for vertical matches
-          if (row < board.height - 2) {
-            const nextPiece1 = Board.piece(board, { row: row + 1, col });
-            const nextPiece2 = Board.piece(board, { row: row + 2, col });
-  
-            if (currentPiece === nextPiece1 && currentPiece === nextPiece2) {
-              verticalMatches.push({
-                matched: currentPiece,
-                positions: [{ row, col }, { row: row + 1, col }, { row: row + 2, col }],
-              });
-            }
-          }
-        }
-      }
-    }
-  
-    // Check if either horizontal or vertical matches array have 3 minimum matches
-    if (horizontalMatches.length >= 3 || verticalMatches.length >= 3) {
-      return true; // Matches exist
-    }
-  
-    return false; // No matches
+export function swapPieces<T>(board: T[][], p1: Position, p2: Position): T[][] {
+  const newBoard = board.map((row) => [...row]);
+  const temp = newBoard[p1.row][p1.col];
+  newBoard[p1.row][p1.col] = newBoard[p2.row][p2.col];
+  newBoard[p2.row][p2.col] = temp;
+  return newBoard;
+}
+
+export function constructIndexOfDesiredPosition(
+    board: Board<any>,
+    p: Position
+): number {
+  return p.row * board.width + p.col;
+}
+
+export function matchesExist<T>(
+    board: Board<T>,
+    p1: Position,
+    p2: Position
+): boolean {
+  return (
+      hasMatch(board, p1) || hasMatch(board, p2) || hasMatchAfterSwap(board, p1, p2)
+  );
+}
+
+function hasMatch<T>(board: Board<T>, p: Position): boolean {
+  const piece = board.board[p.row][p.col];
+  return (
+      checkHorizontalMatch(board, p, piece) ||
+      checkVerticalMatch(board, p, piece)
+  );
+}
+
+function hasMatchAfterSwap<T>(
+    board: Board<T>,
+    p1: Position,
+    p2: Position
+): boolean {
+  const tempBoard = { ...board };
+  const tempPieces = swapPieces([...board.board], p1, p2);
+  tempBoard.board = tempPieces;
+  return hasMatch(tempBoard, p1) || hasMatch(tempBoard, p2);
+}
+
+function checkHorizontalMatch<T>(
+    board: Board<T>,
+    p: Position,
+    piece: T
+): boolean {
+  const { row, col } = p;
+  let count = 1;
+  let left = col - 1;
+  let right = col + 1;
+
+  while (left >= 0 && board.board[row][left] === piece) {
+    count++;
+    left--;
   }
-  
-// export function matchesExist<T>(board: Board<T>): boolean {
-//     // Check for horizontal matches
-//     for (let row = 0; row < board.height; row++) {
-//       for (let col = 0; col < board.width; col++) {
-//         const currentPiece = piece(board, { row, col });
 
-//         if (currentPiece !== undefined) {
-//           // Check right neighbor
-//           if (col < board.width - 2) {
-//             const nextPiece1 = piece(board, { row, col: col + 1 });
-//             const nextPiece2 = piece(board, { row, col: col + 2 });
+  while (right < board.width && board.board[row][right] === piece) {
+    count++;
+    right++;
+  }
 
-//             if (currentPiece === nextPiece1 && currentPiece === nextPiece2) {
-//               return true; // Horizontal match found
-//             }
-//           }
+  return count >= 3;
+}
 
-//           // Check down neighbor
-//           if (row < board.height - 2) {
-//             const nextPiece1 = piece(board, { row: row + 1, col });
-//             const nextPiece2 = piece(board, { row: row + 2, col });
+function checkVerticalMatch<T>(
+    board: Board<T>,
+    p: Position,
+    piece: T
+): boolean {
+  const { row, col } = p;
+  let count = 1;
+  let up = row - 1;
+  let down = row + 1;
 
-//             if (currentPiece === nextPiece1 && currentPiece === nextPiece2) {
-//               return true; // Vertical match found
-//             }
-//           }
-//         }
-//       }
-//     }
+  while (up >= 0 && board.board[up][col] === piece) {
+    count++;
+    up--;
+  }
 
-//     return false; // No matches found
-//   }
+  while (down < board.height && board.board[down][col] === piece) {
+    count++;
+    down++;
+  }
 
-
-// let horizontalAndVerticalNeighbors = [];
-
-//         horizontalAndVerticalNeighbors.push(...[
-//           Board.piece(board, { row, col: col + 1 }),
-//           Board.piece(board, { row, col: col - 1 }),
-//           Board.piece(board, { row, col: col })
-//         ]);
-//         horizontalAndVerticalNeighbors.push(
-//           Board.piece(board, { row, col: col + 2 })
-//         );
-//         horizontalAndVerticalNeighbors.push(
-//           Board.piece(board, { row: row + 1, col })
-//         );
-//         horizontalAndVerticalNeighbors.push(
-//           Board.piece(board, { row: row + 2, col })
-//         );
+  return count >= 3;
+}
