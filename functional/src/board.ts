@@ -26,7 +26,6 @@ export type Board<T> = {
   width: number;
   height: number;
   board: T[][];
-  listeners: BoardListener<T>[];
 };
 
 export type BoardEvent<T> = {
@@ -34,7 +33,6 @@ export type BoardEvent<T> = {
   match?: Match<T>;
 };
 
-type BoardListener<T> = (event: BoardEvent<T>) => void;
 
 export type Effect<T> = {
   kind: "Match" | "Refill";
@@ -77,7 +75,6 @@ export function create<T>(
     width,
     height,
     board,
-    listeners: [],
   };
 }
 

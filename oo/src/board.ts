@@ -10,12 +10,48 @@ export type Match<T> = {
     positions: Position[]
 }
 
-export type BoardEvent<T> = ?;
+export type BoardEvent<T> = {
+    kind: 'Match' | 'Refill';
+    match?: Match<T>;
+};
 
-export type BoardListener<T> = ?;
+type BoardItem<T> = {
+    value: T;
+    position: Position;
+};
+
+export type BoardListener<T> = (event: BoardEvent<T>) => void;
 
 export class Board<T> {
+    generator: Generator<T>;
+    width: number;
+    height: number;
+    board: BoardItem<T>[][];
+    matchedItems: BoardItem<T>[];
+    matchedSequences: BoardItem<T>[][];
+    listener: BoardListener<T>;
+
+    constructor(generator: Generator<T>, width: number, height: number) {
+        this.generator = generator;
+        this.width = width;
+        this.height = height;
+        this.matchedItems = [];
+        this.matchedSequences = [];
+        this.board = [...Array(height)].map(() => [...Array(width)]);
+
+        // Initializing the board
+        for (let i = 0; i < this.height; i++) {
+            for (let j = 0; j < this.width; j++) {
+                this.board[i][j] = {
+                    value: generator.next(),
+                    position: { row: i, col: j },
+                };
+            }
+        }
+    }
+
     addListener(listener: BoardListener<T>) {
+        this.listener = listener;
     }
 
     piece(p: Position): T | undefined {
