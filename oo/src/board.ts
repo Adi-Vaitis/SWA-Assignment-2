@@ -1,4 +1,5 @@
-export type Generator<T>= { next:() => T } 
+
+export type Generator<T>= { next:() => T }
 
 export type Position = {
     row: number,
@@ -55,11 +56,16 @@ export class Board<T> {
     }
 
     piece(p: Position): T | undefined {
+        const { row, col } = p;
+        if (row >= 0 && row < this.height && col >= 0 && col < this.width) {
+            return this.board[row][col].value;
+        }
+        return undefined;
     }
 
     canMove(first: Position, second: Position): boolean {
     }
-    
+
     move(first: Position, second: Position) {
     }
 }
