@@ -26,7 +26,6 @@ export type Board<T> = {
   width: number;
   height: number;
   board: T[][];
-  listeners: BoardListener<T>[];
 };
 
 export type BoardEvent<T> = {
@@ -34,7 +33,6 @@ export type BoardEvent<T> = {
   match?: Match<T>;
 };
 
-type BoardListener<T> = (event: BoardEvent<T>) => void;
 
 export type Effect<T> = {
   kind: "Match" | "Refill";
@@ -77,7 +75,6 @@ export function create<T>(
     width,
     height,
     board,
-    listeners: [],
   };
 }
 
@@ -141,22 +138,11 @@ export function move<T>(
     
     effects.push(...effectsForFirstPosition, ...effectsForSecondPosition);
   }
-  return { board: newBoard, effects: effects };
+  if (effects.some((effect) => effect.kind === "Match")) {
+    effects.push({ kind: "Refill", board: refillBoard(generator, newBoard) });
+  }
 
-  //   while (true) {
-  //     const cascadeEffects = handleCascadingMatches(generator, newBoard);
-  //     if (cascadeEffects.length > 0) {
-  //       effects.push(...cascadeEffects);
-  //     } else {
-  //       break;
-  //     }
-  //   }
-  // } else {
-  //   effects.push({ kind: "Refill", board: refillBoard(generator, newBoard) });
-  // }
-
-  // return { board: newBoard, effects };
-  return undefined;
+  return { board: newBoard, effects };
 }
 
 function handleCascadingMatches<T>(
