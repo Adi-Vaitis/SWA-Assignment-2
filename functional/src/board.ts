@@ -141,22 +141,11 @@ export function move<T>(
     
     effects.push(...effectsForFirstPosition, ...effectsForSecondPosition);
   }
-  return { board: newBoard, effects: effects };
+  if (effects.some((effect) => effect.kind === "Match")) {
+    effects.push({ kind: "Refill", board: refillBoard(generator, newBoard) });
+  }
 
-  //   while (true) {
-  //     const cascadeEffects = handleCascadingMatches(generator, newBoard);
-  //     if (cascadeEffects.length > 0) {
-  //       effects.push(...cascadeEffects);
-  //     } else {
-  //       break;
-  //     }
-  //   }
-  // } else {
-  //   effects.push({ kind: "Refill", board: refillBoard(generator, newBoard) });
-  // }
-
-  // return { board: newBoard, effects };
-  return undefined;
+  return { board: newBoard, effects };
 }
 
 function handleCascadingMatches<T>(
