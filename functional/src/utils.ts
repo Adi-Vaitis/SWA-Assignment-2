@@ -144,3 +144,17 @@ export function constructEffectsForPosition<T>(
 
   return effects;
 }
+
+export function effectsAreEqual<T>(
+  e1: Board.Effect<T>,
+  e2: Board.Effect<T>
+): boolean {
+  if (
+    e1.match === undefined ||
+    e2.match === undefined ||
+    e2.board === undefined ||
+    e1.board === undefined
+  )
+    return false;
+  return e1.kind === e2.kind && e1.board === e2.board && e1.match === e2.match;
+}
