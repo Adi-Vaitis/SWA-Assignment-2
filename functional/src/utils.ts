@@ -1,5 +1,7 @@
 import * as Board from "./board";
 
+//Test
+
 export function positionExistsInBoard(
   board: Board.Board<any>,
   p: Board.Position
