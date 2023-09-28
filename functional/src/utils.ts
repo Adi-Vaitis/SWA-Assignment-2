@@ -127,17 +127,19 @@ export function constructEffectsForPosition<T>(
   let pieceMatchesHorizontally = checkHorizontalMatch(board, p, piece);
   let pieceMatchesVertically = checkVerticalMatch(board, p, piece);
 
-  if(pieceMatchesHorizontally.length >= 3) {
+  if (pieceMatchesHorizontally.length >= 3) {
+    pieceMatchesHorizontally.sort((a, b) => a.row - b.row);
     effects.push({
       kind: "Match",
       match: { matched: piece, positions: pieceMatchesHorizontally },
     });
   }
-  if(pieceMatchesVertically.length >= 3) {
+  if (pieceMatchesVertically.length >= 3) {
+    pieceMatchesVertically.sort((a, b) => a.row - b.row);
     effects.push({
       kind: "Match",
       match: { matched: piece, positions: pieceMatchesVertically },
-    })
+    });
   }
 
   return effects;
