@@ -158,3 +158,70 @@ export function effectsAreEqual<T>(
     return false;
   return e1.kind === e2.kind && e1.board === e2.board && e1.match === e2.match;
 }
+
+export function createBoardWithUndefinedMatched<T>(
+  generator: Generator<T>,
+  board: Board.Board<T>,
+  matchedPositions: Board.Position[]
+): Board.Board<T> {
+  const newBoard: T[][] = [];
+
+  for (let row = 0; row < board.height; row++) {
+    const newRow: T[] = [];
+    for (let col = 0; col < board.width; col++) {
+      const currentPosition: Board.Position = { row, col };
+      const currentPiece = Board.piece(board, currentPosition);
+
+      if (
+        matchedPositions.some((matchedPos) =>
+          arePositionsEqual(matchedPos, currentPosition)
+        )
+      ) {
+        newRow.push(undefined);
+      } else {
+        newRow.push(currentPiece);
+      }
+    }
+    newBoard.push(newRow);
+  }
+
+  return { ...board, board: newBoard };
+}
+
+export function arePositionsEqual(pos1: Board.Position, pos2: Board.Position): boolean {
+  return pos1.row === pos2.row && pos1.col === pos2.col;
+}
+
+export function refillBoard<T>(
+  generator: Generator<T>,
+  board: Board.Board<T>,
+  matchedPositions: Board.Position[]
+): Board.Board<T> {
+  const newBoard: T[][] = [];
+
+  let boardWithUndefinedMatched = createBoardWithUndefinedMatched(generator, board, matchedPositions);
+
+  // from here it needs to shift - the code below has to be changed
+  for (let row = 0; row < board.height; row++) {
+    const newRow: T[] = [];
+    for (let col = 0; col < board.width; col++) {
+      const currentPosition: Board.Position = { row, col };
+      const currentPiece = Board.piece(board, currentPosition);
+
+      if (
+        matchedPositions.some((matchedPos) =>
+          arePositionsEqual(matchedPos, currentPosition)
+        )
+      ) {
+        // If the current position matches one of the matched positions, replace it with a new piece.
+        newRow.push(generator.next());
+      } else {
+        // Otherwise, keep the current piece.
+        newRow.push(currentPiece);
+      }
+    }
+    newBoard.push(newRow);
+  }
+
+  return { ...board, board: newBoard };
+}
