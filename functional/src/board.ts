@@ -7,6 +7,7 @@ import {
   matchesExist,
   positionExistsInBoard,
   positionsAreInTheSameColumnOrRow,
+  refillBoard,
   swapPieces,
 } from "./utils";
 
@@ -216,38 +217,6 @@ export function move<T>(
 
 //   return cascadeEffects;
 // }
-
-function refillBoard<T>(
-  generator: Generator<T>,
-  board: Board<T>,
-  matchedPositions: Position[]
-): Board<T> {
-  const newBoard: T[][] = [];
-
-  for (let row = 0; row < board.height; row++) {
-    const newRow: T[] = [];
-    for (let col = 0; col < board.width; col++) {
-      const currentPosition: Position = { row, col };
-      const currentPiece = piece(board, currentPosition);
-
-      if (
-        matchedPositions.some((matchedPos) =>
-          arePositionsEqual(matchedPos, currentPosition)
-        )
-      ) {
-        // If the current position matches one of the matched positions, replace it with a new piece.
-        newRow.push(generator.next());
-      } else {
-        // Otherwise, keep the current piece.
-        newRow.push(currentPiece);
-      }
-    }
-    newBoard.push(newRow);
-  }
-
-  return { ...board, board: newBoard };
-}
-
 // this shifts the pieces down but the first test won't work, so we need to do it differently for both cases
 // function refillBoard<T>(
 //   generator: Generator<T>,
@@ -273,8 +242,3 @@ function refillBoard<T>(
 
 //   return { ...board, board: newBoard };
 // }
-
-// Helper function to check if two positions are equal.
-function arePositionsEqual(pos1: Position, pos2: Position): boolean {
-  return pos1.row === pos2.row && pos1.col === pos2.col;
-}
