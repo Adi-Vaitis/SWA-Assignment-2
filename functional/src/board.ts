@@ -157,11 +157,18 @@ export function move<T>(
     let moveResultAfterCascading = handleCascadingMatches(
       moveResultBeforeCascading
     );
-    return moveResultAfterCascading;
+    return {
+      board: moveResultAfterCascading.board,
+      effects: moveResultAfterCascading.effects,
+    };
   }
 }
 
 function handleCascadingMatches<T>(moveResult: MoveResult<T>): MoveResult<T> {
+  let initialMoveResult = moveResult;
+  if (moveResult.board.generator === undefined) {
+    return moveResult;
+  }
   for (let row = 0; row < moveResult.board.height; row++) {
     let rowMatch = checkHorizontalMatch(
       moveResult.board,
@@ -235,6 +242,9 @@ function handleCascadingMatches<T>(moveResult: MoveResult<T>): MoveResult<T> {
         }
       }
     }
+  }
+  if (initialMoveResult === moveResult) {
+    handleCascadingMatches(moveResult);
   }
   return moveResult;
 }
