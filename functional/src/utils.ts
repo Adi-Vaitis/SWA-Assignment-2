@@ -160,7 +160,7 @@ export function effectsAreEqual<T>(
 }
 
 export function createBoardWithUndefinedMatched<T>(
-  generator: Generator<T>,
+  generator: Board.Generator<T>,
   board: Board.Board<T>,
   matchedPositions: Board.Position[]
 ): Board.Board<T> {
@@ -193,35 +193,25 @@ export function arePositionsEqual(pos1: Board.Position, pos2: Board.Position): b
 }
 
 export function refillBoard<T>(
-  generator: Generator<T>,
+  generator: Board.Generator<T>,
   board: Board.Board<T>,
   matchedPositions: Board.Position[]
 ): Board.Board<T> {
-  const newBoard: T[][] = [];
-
   let boardWithUndefinedMatched = createBoardWithUndefinedMatched(generator, board, matchedPositions);
 
-  // from here it needs to shift - the code below has to be changed
-  for (let row = 0; row < board.height; row++) {
-    const newRow: T[] = [];
-    for (let col = 0; col < board.width; col++) {
-      const currentPosition: Board.Position = { row, col };
-      const currentPiece = Board.piece(board, currentPosition);
-
-      if (
-        matchedPositions.some((matchedPos) =>
-          arePositionsEqual(matchedPos, currentPosition)
-        )
-      ) {
-        // If the current position matches one of the matched positions, replace it with a new piece.
-        newRow.push(generator.next());
-      } else {
-        // Otherwise, keep the current piece.
-        newRow.push(currentPiece);
+  for (let row = boardWithUndefinedMatched.height - 1; row >= 0; row--) {
+    for (let col = 0; col < boardWithUndefinedMatched.width; col++) {
+      if (boardWithUndefinedMatched.board[row][col] === undefined) {
+        for (let row2 = row; row2 >= 0; row2--) {
+          if (row2 === 0) {
+            boardWithUndefinedMatched.board[row2][col] = generator.next();
+          } else {
+            boardWithUndefinedMatched.board[row2][col] = boardWithUndefinedMatched.board[row2 - 1][col];
+          }
+        }
       }
     }
-    newBoard.push(newRow);
   }
 
-  return { ...board, board: newBoard };
+  return { ...board, board: boardWithUndefinedMatched.board };
 }
