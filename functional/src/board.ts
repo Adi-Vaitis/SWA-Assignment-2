@@ -153,15 +153,10 @@ export function move<T>(
       board: refillBoard(generator, newBoard, positionsMatched).board,
     };
     effects.push({ kind: "Refill" });
-
-    let moveResultBeforeCascading = {board: newBoard, effects: effects};
-    /// TODO implement cascading matches
-    // here we will need to set the first and second position again for cascading effect
-    // firstPosition = first;
-    // secondPosition = second;
-
-    return handleCascadingMatches(moveResultBeforeCascading);
   }
+  let moveResultBeforeCascading = {board: newBoard, effects: effects};
+  let moveResultAfterCascading = handleCascadingMatches(moveResultBeforeCascading);
+  return moveResultAfterCascading;
 }
 
 function handleCascadingMatches<T>(moveResult: MoveResult<T>): MoveResult<T> {
@@ -191,9 +186,15 @@ function handleCascadingMatches<T>(moveResult: MoveResult<T>): MoveResult<T> {
             ]
           }
           moveResult = {
-            ...moveResult,
+            effects: [
+              ...moveResult.effects,
+              {
+                kind:'Refill',
+              }
+            ],
             board: refillBoard(moveResult.board.generator, moveResult.board, colMatch)
           };
+
         }
       }
     }
