@@ -286,3 +286,100 @@ export function regenerateUndefinedTiles<T>(
 
   return { ...boardWithUndefined, board: regeneratedBoard };
 }
+
+// export function handleCascadingMatches<T>(
+//   generator: Board.Generator<T>,
+//   board: Board.Board<T>
+// ): Board.MoveResult<T> {
+//   let effects: Board.Effect<T>[] = [];
+
+//   // Define a recursive function to handle cascading matches
+//   function cascade(board: Board.Board<T>) {
+//     const cascadingEffects = [];
+
+//     for (let row = 0; row < board.height; row++) {
+//       for (let col = 0; col < board.width; col++) {
+//         const currentPiece = Board.piece(board, { row, col });
+//         if (currentPiece === undefined) continue;
+
+//         // Check for horizontal match
+//         const horizontalMatch = matchesExist(
+//           board,
+//           { row, col },
+//           { row, col: col + 1 }
+//         );
+
+//         // Check for vertical match
+//         const verticalMatch = matchesExist(
+//           board,
+//           { row, col },
+//           { row: row + 1, col }
+//         );
+
+//         if (horizontalMatch || verticalMatch) {
+//           // Remove matched pieces
+//           board.board.flat()[row * board.width + col] = undefined;
+
+//           const positions: Position[] = [{ row, col }];
+//           const matchedPiece = currentPiece;
+//           if (horizontalMatch) {
+//             positions.push({ row, col: col + 1 });
+//           }
+//           if (verticalMatch) {
+//             positions.push({ row: row + 1, col });
+//           }
+
+//           // Add match effect
+//           cascadingEffects.push({
+//             kind: "Match",
+//             match: { matched: matchedPiece, positions },
+//           });
+//         }
+//       }
+//     }
+
+//     // If there were cascading effects, add a refill effect and recursively check for more matches
+//     if (cascadingEffects.length > 0) {
+//       effects.push(...cascadingEffects);
+//       effects.push({ kind: "Refill" });
+//       const newBoard = refillBoard(generator, board, []);
+//       // Recursively check for more cascading matches
+//       cascade(newBoard);
+//     }
+//   }
+
+//   // Start the cascading process
+//   cascade(board);
+
+//   return { board, effects };
+// }
+
+
+// // export function handleCascadingMatches<T>(moveResultBeforeCascadingMatches: Board.MoveResult<T>): Board.MoveResult<T> {
+// //   // it needs to be a while loop that keeps going and handles each match, adding it in effect, modifying the moveresult
+// //   // it needs to check two positions and these positions needs to be only on the same row or column
+// //   // it needs to check if there is a match on the board
+// //   // it needs to check if there is a match after swapping the two pieces
+
+// //   let effects: Board.Effect<T>[] = [];
+// //   let moveResultAfterCascadingMatches: Board.MoveResult<T> = { ...moveResultBeforeCascadingMatches, effects: [] };
+// //   let positions = Board.positions(moveResultBeforeCascadingMatches.board);
+// //   // take each positions and checks thrroughout the positiions array only if the col or row is the same
+// //   // if it is the same, then it checks if there is a match
+// //   // if there is a match, then it adds it to the effects array
+// //   // then it does the same functionality as in the move method in board.ts 
+  
+  
+// //   for (let row = 0; row < moveResultBeforeCascadingMatches.board.height; row++) {
+// //     for (let col = 0; col < moveResultBeforeCascadingMatches.board.width; col++) {
+// //       if (moveResultBeforeCascadingMatches.board.board[row][col] === undefined) {
+// //         continue;
+// //       }
+// //       const currentPosition: Board.Position = { row, col };
+// //       const currentPiece = Board.piece(moveResultBeforeCascadingMatches.board, currentPosition);
+
+// //     }
+// //   }
+
+// //   return undefined;
+// // }

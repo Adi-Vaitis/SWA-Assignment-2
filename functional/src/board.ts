@@ -132,13 +132,11 @@ export function move<T>(
   };
 
   const effects: Effect<T>[] = [];
-  let firstPosition = first;
-  let secondPosition = second;
-  let matchesExists = matchesExist(newBoard, firstPosition, secondPosition);
-  while (matchesExists) {
+  let matchesExists = matchesExist(newBoard, first, second);
+  if (matchesExists) {
     let newEffects : Effect<T>[] = [
-      ...constructEffectsForPosition(newBoard, firstPosition),
-      ...constructEffectsForPosition(newBoard, secondPosition)
+      ...constructEffectsForPosition(newBoard, first),
+      ...constructEffectsForPosition(newBoard, second)
     ];
     effects.push(...newEffects);
 
@@ -155,65 +153,104 @@ export function move<T>(
       board: refillBoard(generator, newBoard, positionsMatched).board,
     };
     effects.push({ kind: "Refill" });
+
+    let moveResultBeforeCascading = {board: newBoard, effects: effects};
     /// TODO implement cascading matches
-    matchesExists = false;
     // here we will need to set the first and second position again for cascading effect
     // firstPosition = first;
     // secondPosition = second;
+
+    return handleCascadingMatches(moveResultBeforeCascading);
   }
-  return { board: newBoard, effects };
 }
 
-function handleCascadingMatches<T>(
-  generator: Generator<T>,
-  board: Board<T>
-): Effect<T>[] {
-  const cascadeEffects: Effect<T>[] = [];
-  let cascadeOccurred = false;
+function handleCascadingMatches<T>(moveResult: MoveResult<T>): MoveResult<T> {
 
-  for (let row = 0; row < board.height; row++) {
-    for (let col = 0; col < board.width; col++) {
-      const currentPiece = piece(board, { row, col });
-      if (currentPiece === undefined) continue;
-
-      const horizontalMatch = matchesExist(
-        board,
-        { row, col },
-        { row, col: col + 1 }
-      );
-      const verticalMatch = matchesExist(
-        board,
-        { row, col },
-        { row: row + 1, col }
-      );
-
-      if (horizontalMatch || verticalMatch) {
-        board.board.flat()[row * board.width + col] = undefined;
-
-        const positions: Position[] = [{ row, col }];
-        const matchedPiece = currentPiece;
-        if (horizontalMatch) {
-          positions.push({ row, col: col + 1 });
+  for (let row = 0; row < moveResult.board.height; row++) { 
+    let rowMatch = checkHorizontalMatch(moveResult.board, {row: row, col: 0}, piece(moveResult.board, {row: row, col: 0}));
+    
+    if(rowMatch.length >= 3){
+      
+    }
+    else {
+      for (let col = 0; col < moveResult.board.width; col++) { 
+        let colMatch = checkVerticalMatch(moveResult.board, {row: 0, col: col}, piece(moveResult.board, {row: 0, col: col}));
+        if (colMatch.length >= 3){
+          let pieceMatched = piece(moveResult.board, colMatch[0]);
+          moveResult = {
+            ...moveResult,
+            effects:[
+              ...moveResult.effects,
+              {
+                kind: "Match",
+                match: {
+                  matched: pieceMatched,
+                  positions: colMatch
+                }
+              }
+            ]
+          }
+          moveResult = {
+            ...moveResult,
+            board: refillBoard(moveResult.board.generator, moveResult.board, colMatch)
+          };
         }
-        if (verticalMatch) {
-          positions.push({ row: row + 1, col });
-        }
-        cascadeEffects.push({
-          kind: "Match",
-          match: { matched: matchedPiece, positions },
-        });
-
-        cascadeOccurred = true;
       }
     }
   }
-
-  if (cascadeOccurred) {
-    cascadeEffects.push({
-      kind: "Refill",
-      board: refillBoard(generator, board),
-    });
-  }
-
-  return cascadeEffects;
+  return moveResult;
 }
+
+// function handleCascadingMatches<T>(
+//   generator: Generator<T>,
+//   board: Board<T>
+// ): Effect<T>[] {
+//   const cascadeEffects: Effect<T>[] = [];
+//   let cascadeOccurred = false;
+
+//   for (let row = 0; row < board.height; row++) {
+//     for (let col = 0; col < board.width; col++) {
+//       const currentPiece = piece(board, { row, col });
+//       if (currentPiece === undefined) continue;
+
+//       const horizontalMatch = matchesExist(
+//         board,
+//         { row, col },
+//         { row, col: col + 1 }
+//       );
+//       const verticalMatch = matchesExist(
+//         board,
+//         { row, col },
+//         { row: row + 1, col }
+//       );
+
+//       if (horizontalMatch || verticalMatch) {
+//         board.board.flat()[row * board.width + col] = undefined;
+
+//         const positions: Position[] = [{ row, col }];
+//         const matchedPiece = currentPiece;
+//         if (horizontalMatch) {
+//           positions.push({ row, col: col + 1 });
+//         }
+//         if (verticalMatch) {
+//           positions.push({ row: row + 1, col });
+//         }
+//         cascadeEffects.push({
+//           kind: "Match",
+//           match: { matched: matchedPiece, positions },
+//         });
+
+//         cascadeOccurred = true;
+//       }
+//     }
+//   }
+
+//   if (cascadeOccurred) {
+//     cascadeEffects.push({
+//       kind: "Refill",
+//       board: refillBoard(generator, board),
+//     });
+//   }
+
+//   return cascadeEffects;
+// }
