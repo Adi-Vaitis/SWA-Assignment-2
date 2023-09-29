@@ -188,7 +188,10 @@ export function createBoardWithUndefinedMatched<T>(
   return { ...board, board: newBoard };
 }
 
-export function arePositionsEqual(pos1: Board.Position, pos2: Board.Position): boolean {
+export function arePositionsEqual(
+  pos1: Board.Position,
+  pos2: Board.Position
+): boolean {
   return pos1.row === pos2.row && pos1.col === pos2.col;
 }
 
@@ -199,19 +202,87 @@ export function refillBoard<T>(
 ): Board.Board<T> {
   let boardWithUndefinedMatched = createBoardWithUndefinedMatched(generator, board, matchedPositions);
 
-  for (let row = boardWithUndefinedMatched.height - 1; row >= 0; row--) {
-    for (let col = 0; col < boardWithUndefinedMatched.width; col++) {
-      if (boardWithUndefinedMatched.board[row][col] === undefined) {
-        for (let row2 = row; row2 >= 0; row2--) {
-          if (row2 === 0) {
-            boardWithUndefinedMatched.board[row2][col] = generator.next();
-          } else {
-            boardWithUndefinedMatched.board[row2][col] = boardWithUndefinedMatched.board[row2 - 1][col];
-          }
-        }
-      }
+  let sortedBoard = sortBoard(boardWithUndefinedMatched);
+  let refilledBoard = regenerateUndefinedTiles(sortedBoard);
+  return refilledBoard;
+}
+
+function sortBoard<T>(board: Board.Board<T>): Board.Board<T> {
+  const numRows = board.board.length;
+  const numCols = board.width;
+
+  // Create an array of sorted columns //NEEDS TO BE A BOARD
+  const sortedColumns: (T | undefined)[][] = [];
+
+  // Apply custom sort to each column
+  for (let col = 0; col < numCols; col++) {
+    // Extract the column as a 1D array
+    const column: (T | undefined)[] = [];
+    for (let row = 0; row < numRows; row++) {
+      column.push(board.board[row][col]);
+    }
+
+    // Sort the column using the custom sort function
+    const sortedColumn = sortColumns(column);
+
+    // Store the sorted column in the result
+    sortedColumns.push(sortedColumn);
+  }
+
+  // Transpose the sortedColumns to get the final sorted 2D array
+  const sortedArray: (T | undefined)[][] = [];
+  for (let row = 0; row < numRows; row++) {
+    sortedArray.push([]);
+    for (let col = 0; col < numCols; col++) {
+      sortedArray[row].push(sortedColumns[col][row]);
     }
   }
 
-  return { ...board, board: boardWithUndefinedMatched.board };
+  return {
+    ...board,
+    board: sortedArray,
+  };
+}
+
+function sortColumns<T>(arr: (T | undefined)[]): (T | undefined)[] {
+  // Separate null values and non-null strings
+  const nullValues: (T | null)[] = [];
+  const stringValues: T[] = [];
+
+  for (const item of arr) {
+    if (item === undefined) {
+      nullValues.push(undefined);
+    } else {
+      stringValues.push(item);
+    }
+  }
+
+  // Sort the non-null string values in their original order
+  stringValues.sort((a, b) => arr.indexOf(a) - arr.indexOf(b));
+
+  // Combine the sorted string values and null values
+  const sortedArray = nullValues.concat(stringValues);
+
+  return sortedArray;
+}
+
+export function regenerateUndefinedTiles<T>(
+  boardWithUndefined: Board.Board<T>,
+): Board.Board<T> {
+  const regeneratedBoard: T[][] = [];
+
+  for (let row = 0; row < boardWithUndefined.height; row++) {
+    const newRow: T[] = [];
+    for (let col = 0; col < boardWithUndefined.width; col++) {
+      if (boardWithUndefined.board[row][col] === undefined) {
+        newRow.push(boardWithUndefined.generator.next());
+      }
+      else {
+        newRow.push(boardWithUndefined.board[row][col]);
+      }
+    }
+    regeneratedBoard.push(newRow);
+  }
+
+  return { ...boardWithUndefined, board: regeneratedBoard };
 }
