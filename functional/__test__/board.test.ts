@@ -362,7 +362,7 @@ describe("Board", () => {
                 let effects = Board.move(generator, board, {row: 0, col: 1}, {row: 2, col: 1}).effects;
                 console.log(effects);
                 expect(effects.map(forgetBoard)).toEqual([
-                    {kind: 'Match', match: {matched: 'A', positions: [{row: 0, col: 0}, {row: 0, col: 1}, {row: 0, col: 2}]}},
+                    {kind: 'Match', match: {matched: 'A', positions: [{row: 0, col: 1}, {row: 0, col: 0}, {row: 0, col: 2}]}},
                     {kind: 'Refill'},
                     {kind: 'Match', match: {matched: 'C', positions: [{row: 0, col: 2}, {row: 1, col: 2}, {row: 2, col: 2}]}},
                     {kind: 'Refill'},
@@ -374,7 +374,7 @@ describe("Board", () => {
                 generator.prepare('A', 'A', 'A')
                 generator.prepare('A', 'A', 'D')
                 expect(Board.move(generator, board, {row: 0, col: 1}, {row: 2, col: 1}).effects.map(forgetBoard)).toEqual([
-                    {kind: 'Match', match: {matched: 'A', positions: [{row: 0, col: 0}, {row: 0, col: 1}, {row: 0, col: 2}]}},
+                    {kind: 'Match', match: {matched: 'A', positions: [{row: 0, col: 1}, {row: 0, col: 0}, {row: 0, col: 2}]}},
                     {kind: 'Refill'},
                     {kind: 'Match', match: {matched: 'C', positions: [{row: 0, col: 2}, {row: 1, col: 2}, {row: 2, col: 2}]}},
                     {kind: 'Refill'},
