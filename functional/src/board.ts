@@ -165,8 +165,8 @@ export function move<T>(
 }
 
 function handleCascadingMatches<T>(
-  generator: Generator<T>,
-  board: Board<T>
+    generator: Generator<T>,
+    board: Board<T>
 ): Effect<T>[] {
   const cascadeEffects: Effect<T>[] = [];
   let cascadeOccurred = false;
