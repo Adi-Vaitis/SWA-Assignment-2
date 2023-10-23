@@ -211,25 +211,19 @@ function sortBoard<T>(board: Board.Board<T>): Board.Board<T> {
   const numRows = board.board.length;
   const numCols = board.width;
 
-  // Create an array of sorted columns //NEEDS TO BE A BOARD
   const sortedColumns: (T | undefined)[][] = [];
 
-  // Apply custom sort to each column
   for (let col = 0; col < numCols; col++) {
-    // Extract the column as a 1D array
     const column: (T | undefined)[] = [];
     for (let row = 0; row < numRows; row++) {
       column.push(board.board[row][col]);
     }
 
-    // Sort the column using the custom sort function
     const sortedColumn = sortColumns(column);
 
-    // Store the sorted column in the result
     sortedColumns.push(sortedColumn);
   }
 
-  // Transpose the sortedColumns to get the final sorted 2D array
   const sortedArray: (T | undefined)[][] = [];
   for (let row = 0; row < numRows; row++) {
     sortedArray.push([]);
@@ -245,7 +239,6 @@ function sortBoard<T>(board: Board.Board<T>): Board.Board<T> {
 }
 
 function sortColumns<T>(arr: (T | undefined)[]): (T | undefined)[] {
-  // Separate null values and non-null strings
   const nullValues: (T | null)[] = [];
   const stringValues: T[] = [];
 
@@ -257,10 +250,8 @@ function sortColumns<T>(arr: (T | undefined)[]): (T | undefined)[] {
     }
   }
 
-  // Sort the non-null string values in their original order
   stringValues.sort((a, b) => arr.indexOf(a) - arr.indexOf(b));
 
-  // Combine the sorted string values and null values
   const sortedArray = nullValues.concat(stringValues);
 
   return sortedArray;
