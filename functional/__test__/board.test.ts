@@ -31,7 +31,7 @@ class GeneratorFake<T> implements Generator<T> {
 
     next(): T {
         let v = this.upcoming.shift()
-        if (v === undefined) 
+        if (v === undefined)
             throw new Error('Empty queue')
         else
             return v
@@ -82,9 +82,9 @@ describe("Board", () => {
         })
 
         it("has row * col positions", () => {
-            const positions = [{row: 0, col: 0}, {row: 0, col: 1}, 
-                               {row: 1, col: 0}, {row: 1, col: 1},
-                               {row: 2, col: 0}, {row: 2, col: 1}]
+            const positions = [{row: 0, col: 0}, {row: 0, col: 1},
+                {row: 1, col: 0}, {row: 1, col: 1},
+                {row: 2, col: 0}, {row: 2, col: 1}]
             expect(Board.positions(board)).toEqual(positions)
         })
 
@@ -176,21 +176,19 @@ describe("Board", () => {
             })
 
             it("moves the pieces during a move", () => {
-                console.log('moves the pieces');
                 generator.prepare('C', 'D', 'A')
                 board = Board.move(generator, board, {row: 2, col: 1}, {row: 0, col: 1}).board
                 expect(Board.piece(board, {row: 2, col: 1})).toEqual('B')
             })
             it("finds single horizontal match when moving first piece to a match", () => {
                 generator.prepare('C', 'D', 'A')
-                console.log("finds single horizontal match when moving first piece to a match");
                 expect(Board.move(generator, board, {row: 2, col: 1}, {row: 0, col: 1}).effects)
-                    .toContainEqual({kind: 'Match', match: {matched: 'A', positions: [{row: 0, col: 1}, {row: 0, col: 0}, {row: 0, col: 2}]}})
+                    .toContainEqual({kind: 'Match', match: {matched: 'A', positions: [{row: 0, col: 0}, {row: 0, col: 1}, {row: 0, col: 2}]}})
             })
             it("finds single horizontal match when moving second piece to a match", () => {
                 generator.prepare('C', 'D', 'A')
                 expect(Board.move(generator, board, {row: 0, col: 1}, {row: 2, col: 1}).effects)
-                    .toContainEqual({kind: 'Match', match: {matched: 'A', positions: [{row: 0, col: 1}, {row: 0, col: 0}, {row: 0, col: 2}]}})
+                    .toContainEqual({kind: 'Match', match: {matched: 'A', positions: [{row: 0, col: 0}, {row: 0, col: 1}, {row: 0, col: 2}]}})
             })
             it("finds single vertical match when moving first piece to a match", () => {
                 generator.prepare('C', 'D', 'A')
@@ -200,7 +198,7 @@ describe("Board", () => {
             it("finds single vertical match when moving second piece to a match", () => {
                 generator.prepare('C', 'D', 'A')
                 expect(Board.move(generator, board, {row: 2, col: 3}, {row: 3, col: 3}).effects)
-                .toContainEqual({kind: 'Match', match: {matched: 'C', positions: [{row: 0, col: 3}, {row: 1, col: 3}, {row: 2, col: 3}]}})
+                    .toContainEqual({kind: 'Match', match: {matched: 'C', positions: [{row: 0, col: 3}, {row: 1, col: 3}, {row: 2, col: 3}]}})
             })
             it("fires multiple events on horz + vert matches", () => {
                 generator.prepare('G', 'H', 'I')
@@ -295,13 +293,13 @@ describe("Board", () => {
                     'C', 'B', 'D',
                 )
                 board = Board.create(generator, 3, 4)
-                generator.prepare('D', 'C', 'B', 'B', 'A')
+                generator.prepare('X', 'C', 'B', 'B', 'A')
                 require(Board.move(generator, board, {row: 0, col: 1}, {row: 2, col: 1}).board).toMatch(
                     '*', '*', '*',
                     'D', '*', 'A',
                     'D', '*', 'C',
                     'C', 'A', 'D',
-                ).withPieces('A', 'B', 'B', 'C', 'D')
+                ).withPieces('A', 'B', 'B', 'C', 'X')
             })
         })
 
@@ -359,10 +357,8 @@ describe("Board", () => {
             it("registers if refilling brings new matches", () => {
                 generator.prepare('B', 'C', 'C')
                 generator.prepare('A', 'A', 'D')
-                let effects = Board.move(generator, board, {row: 0, col: 1}, {row: 2, col: 1}).effects;
-                console.log(effects);
-                expect(effects.map(forgetBoard)).toEqual([
-                    {kind: 'Match', match: {matched: 'A', positions: [{row: 0, col: 1}, {row: 0, col: 0}, {row: 0, col: 2}]}},
+                expect(Board.move(generator, board, {row: 0, col: 1}, {row: 2, col: 1}).effects.map(forgetBoard)).toEqual([
+                    {kind: 'Match', match: {matched: 'A', positions: [{row: 0, col: 0}, {row: 0, col: 1}, {row: 0, col: 2}]}},
                     {kind: 'Refill'},
                     {kind: 'Match', match: {matched: 'C', positions: [{row: 0, col: 2}, {row: 1, col: 2}, {row: 2, col: 2}]}},
                     {kind: 'Refill'},
@@ -374,7 +370,7 @@ describe("Board", () => {
                 generator.prepare('A', 'A', 'A')
                 generator.prepare('A', 'A', 'D')
                 expect(Board.move(generator, board, {row: 0, col: 1}, {row: 2, col: 1}).effects.map(forgetBoard)).toEqual([
-                    {kind: 'Match', match: {matched: 'A', positions: [{row: 0, col: 1}, {row: 0, col: 0}, {row: 0, col: 2}]}},
+                    {kind: 'Match', match: {matched: 'A', positions: [{row: 0, col: 0}, {row: 0, col: 1}, {row: 0, col: 2}]}},
                     {kind: 'Refill'},
                     {kind: 'Match', match: {matched: 'C', positions: [{row: 0, col: 2}, {row: 1, col: 2}, {row: 2, col: 2}]}},
                     {kind: 'Refill'},
