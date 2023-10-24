@@ -1,9 +1,15 @@
+import {findMatches, positionExistsOnBoard, handleCascadeEffect} from "./utils";
 
-export type Generator<T>= { next:() => T }
+export type Generator<T> = { next: () => T }
 
 export type Position = {
     row: number,
     col: number
+}
+
+export type Piece<T> = {
+    position: Position;
+    value: T;
 }
 
 export type Match<T> = {
@@ -12,60 +18,98 @@ export type Match<T> = {
 }
 
 export type BoardEvent<T> = {
-    kind: 'Match' | 'Refill';
-    match?: Match<T>;
+    kind: `Match` | `Refill`,
+    match?: Match<T>
 };
 
-type BoardItem<T> = {
-    value: T;
-    position: Position;
-};
-
-export type BoardListener<T> = (event: BoardEvent<T>) => void;
+export type BoardListener<T> = (e: BoardEvent<T>) => any
 
 export class Board<T> {
-    generator: Generator<T>;
     width: number;
     height: number;
-    board: BoardItem<T>[][];
-    matchedItems: BoardItem<T>[];
-    matchedSequences: BoardItem<T>[][];
     listener: BoardListener<T>;
+    generator: Generator<T>;
+    tiles: Piece<T>[][];
 
-    constructor(generator: Generator<T>, width: number, height: number) {
+    constructor(generator: Generator<T>, columns: number, rows: number) {
+        this.width = columns;
+        this.height = rows;
         this.generator = generator;
-        this.width = width;
-        this.height = height;
-        this.matchedItems = [];
-        this.matchedSequences = [];
-        this.board = [...Array(height)].map(() => [...Array(width)]);
+        this.tiles = this.initializeBoard();
+    }
 
-        // Initializing the board
-        for (let i = 0; i < this.height; i++) {
-            for (let j = 0; j < this.width; j++) {
-                this.board[i][j] = {
-                    value: generator.next(),
-                    position: { row: i, col: j },
-                };
+    private initializeBoard(): Piece<T>[][] {
+        const grid: Piece<T>[][] = [];
+
+        for (let row = 0; row < this.height; row++) {
+            const rowArray: Piece<T>[] = [];
+            for (let col = 0; col < this.width; col++) {
+                const value = this.generator.next();
+                rowArray.push({ position: { row, col }, value });
             }
+            grid.push(rowArray);
         }
+
+        return grid;
     }
 
     addListener(listener: BoardListener<T>) {
         this.listener = listener;
     }
 
-    piece(p: Position): T | undefined {
-        const { row, col } = p;
-        if (row >= 0 && row < this.height && col >= 0 && col < this.width) {
-            return this.board[row][col].value;
+    piece(position: Position): T | undefined {
+        if (positionExistsOnBoard(this, position)) {
+            return undefined;
         }
-        return undefined;
+        const piece = this.tiles[position.row][position.col];
+        return piece ? piece.value : undefined;
+    }
+
+    positions(): Position[] {
+        const positions: Position[] = [];
+        for (let row = 0; row < this.height; row++) {
+            for (let col = 0; col < this.width; col++) {
+                positions.push({ row, col });
+            }
+        }
+        return positions;
     }
 
     canMove(first: Position, second: Position): boolean {
+        if (positionExistsOnBoard(this, first) || positionExistsOnBoard(this, second)) {
+            return false;
+        }
+
+        if (first.col === second.col && first.row == second.row) {
+            return false;
+        }
+
+        if (!(first.col === second.col || first.row === second.row)) {
+            return false;
+        }
+
+        if (this.piece(second) && this.piece(first)) {
+            if (first.col === second.col || first.row === second.row) {
+                const board: Board<T> = JSON.parse(JSON.stringify(this)) as Board<T>;
+                board.tiles[first.row][first.col] = this.tiles[second.row][second.col];
+                board.tiles[second.row][second.col] = this.tiles[first.row][first.col];
+                if (findMatches(board).length <= 0) return false;
+            }
+        }
+        return true;
     }
 
     move(first: Position, second: Position) {
+        if (this.canMove(first, second)) {
+            const firstPiece = this.tiles[first.row][first.col];
+            const secondPiece = this.tiles[second.row][second.col];
+
+            this.tiles[first.row][first.col] = secondPiece;
+            this.tiles[second.row][second.col] = firstPiece;
+
+            const matches = findMatches(this);
+
+            handleCascadeEffect(this, matches)
+        }
     }
 }
