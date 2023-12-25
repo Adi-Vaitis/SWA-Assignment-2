@@ -85,12 +85,20 @@ export const swapPieces = <T>(board: Board<T>, first: Position, second: Position
     [board.pieces[first.row][first.col], board.pieces[second.row][second.col]] = [board.pieces[second.row][second.col], board.pieces[first.row][first.col]]
 }
 
-export const registerMatch = <T>(matches: Match<T>[], effects: Effect<T>[]): Effect<T>[] => {
+export const registerMatch = <T>(matches: Match<T>[], effects: Effect<T>[],
+                                 newEffectsWithMatches: <T>(effects: Effect<T>[], match: Match<T>) => Effect<T>[]): Effect<T>[] => {
     matches.forEach((match) => {
-        effects = [...effects, {kind: "Match", match}]
+        // example of using HOF
+        effects = newEffectsWithMatches(effects, match);
     })
 
     return effects
+}
+
+export const updateEffectsWithMatches = <T>(effects: Effect<T>[], match: Match<T>): Effect<T>[] => {
+    // example of using HOF
+    effects = [...effects, { kind: "Match", match}];
+    return effects;
 }
 
 export const constructAllMatchesFromBoard = <T>(board: Board<T>, matches: Match<T>[]): Match<T>[] => {
@@ -146,7 +154,9 @@ export const shiftTilesDown = <T>(board: Board<T>): void => {
 //recursive function
 export const handleCascadeEffect = <T>(generator: Generator<T>, board: Board<T>, effects: Effect<T>[]): Effect<T>[] => {
     if (constructAllMatchesFromBoard(board, []).length) {
-        effects = registerMatch(constructAllMatchesFromBoard(board, []), effects)
+        // example of using HOF
+        effects = registerMatch(constructAllMatchesFromBoard(board, []), effects, updateEffectsWithMatches)
+
         removeMatchesFromBoard(board, constructAllMatchesFromBoard(board, []).flatMap(match => match.positions))
         shiftTilesDown(board);
         handleRefill(generator, board)
