@@ -1,5 +1,13 @@
 import {findMatches, positionExistsOnBoard, handleCascadeEffect} from "./utils";
 
+// types not used here
+// Intersection types
+// type MovingPiece = GamePiece & { velocity: number };
+
+// Union type
+// type CellValue = GamePiece | null;
+
+
 export type Generator<T> = { next: () => T }
 
 export type Position = {
