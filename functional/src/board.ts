@@ -2,6 +2,29 @@ import {findValidMatches, handleCascadeEffect, matchesExists, swapPieces} from "
 
 export type Generator<T>= { next:() => T }
 
+// TYPES NOT USED
+// Union  type
+// type Temperature = number;
+// type WeatherCondition = string;
+//
+// type WeatherData = Temperature | WeatherCondition;
+//
+// const currentWeather: WeatherData = "Sunny"; // or it can be a number, for example 30
+//
+// // Intersection types
+// type Employee = {
+//   name: string;
+//   startDate: Date;
+// }
+//
+// type Manager = Employee & {
+//   department: string;
+// }
+//
+// const officeManager: Manager = { name: "Alice", startDate: new Date(), department: "IT" };
+
+// TYPES USED
+// Object type
 export type Position = {
   row: number,
   col: number
