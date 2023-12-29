@@ -104,7 +104,7 @@ export function handleCascadeEffect<T>(board: Board<T>, matches: Match<T>[]) {
     }
 }
 
-export function positionExistsOnBoard<T>(board: Board<T>, position: Position | undefined): boolean {
+export function positionDoesNotExistOnBoard<T>(board: Board<T>, position: Position | undefined): boolean {
     if (position === undefined) {
         return true;
     }

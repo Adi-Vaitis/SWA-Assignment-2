@@ -1,4 +1,4 @@
-import {findMatches, positionExistsOnBoard, handleCascadeEffect} from "./utils";
+import {findMatches, positionDoesNotExistOnBoard, handleCascadeEffect} from "./utils";
 
 // types not used here
 // Intersection types
@@ -66,7 +66,7 @@ export class Board<T> {
     }
 
     piece(position: Position): T | undefined {
-        if (positionExistsOnBoard(this, position)) {
+        if (positionDoesNotExistOnBoard(this, position)) {
             return undefined;
         }
         const piece = this.tiles[position.row][position.col];
@@ -84,7 +84,7 @@ export class Board<T> {
     }
 
     canMove(first: Position, second: Position): boolean {
-        if (positionExistsOnBoard(this, first) || positionExistsOnBoard(this, second)) {
+        if (positionDoesNotExistOnBoard(this, first) || positionDoesNotExistOnBoard(this, second)) {
             return false;
         }
 

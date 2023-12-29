@@ -75,7 +75,7 @@ export function canMove<T>(board: Board<T>, first: Position, second: Position): 
     return false
   }
 
-  swapPieces(board, first, second)
+  [board.pieces[first.row][first.col], board.pieces[second.row][second.col]] = [board.pieces[second.row][second.col], board.pieces[first.row][first.col]]
   if (!matchesExists(board, first, board.pieces[first.row][first.col]) && !matchesExists(board, second, board.pieces[second.row][second.col]))
   {
     swapPieces(board, first, second)
