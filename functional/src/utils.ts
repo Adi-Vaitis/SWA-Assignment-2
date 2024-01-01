@@ -81,10 +81,8 @@ export const matchesExists = <T>(board: Board<T>, position: Position, value: T):
     return findValidMatches(board, position, [], value).length > 0
 }
 
-export const swapPieces = <T>(board: Board<T>, first: Position, second: Position): Board<T> => {
+export const swapPieces = <T>(board: Board<T>, first: Position, second: Position): void => {
     [board.pieces[first.row][first.col], board.pieces[second.row][second.col]] = [board.pieces[second.row][second.col], board.pieces[first.row][first.col]]
-
-    return board;
 }
 
 export const registerMatch = <T>(matches: Match<T>[], effects: Effect<T>[]): Effect<T>[] => {

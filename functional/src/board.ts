@@ -52,14 +52,14 @@ export function canMove<T>(board: Board<T>, first: Position, second: Position): 
     return false
   }
 
-  let newBoard = swapPieces(board, first, second)
-  if (!matchesExists(newBoard, first, newBoard.pieces[first.row][first.col]) && !matchesExists(newBoard, second, newBoard.pieces[second.row][second.col]))
+  swapPieces(board, first, second)
+  if (!matchesExists(board, first, board.pieces[first.row][first.col]) && !matchesExists(board, second, board.pieces[second.row][second.col]))
   {
-    swapPieces(newBoard, first, second)
+    swapPieces(board, first, second)
     return false
   }
 
-  swapPieces(newBoard, first, second)
+  swapPieces(board, first, second)
   return true;
 }
 
@@ -71,10 +71,10 @@ export function move<T>(generator: Generator<T>, board: Board<T>, first: Positio
     }
   }
 
-  let newBoard = swapPieces(board, first, second)
+  swapPieces(board, first, second)
 
   return {
-    board: newBoard,
+    board,
     effects: handleCascadeEffect(generator, board, [])
   }
 }
