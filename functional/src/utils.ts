@@ -74,15 +74,18 @@ export const findValidMatches = <T>(board: Board<T>, position: Position, matches
         })
     }
 
-    return matches
+    return matches;
 }
 
 export const matchesExists = <T>(board: Board<T>, position: Position, value: T): boolean => {
-    return findValidMatches(board, position, [], value).length > 0
+    return findValidMatches(board, position, [], value).length > 0;
 }
 
-export const swapPieces = <T>(board: Board<T>, first: Position, second: Position): void => {
-    [board.pieces[first.row][first.col], board.pieces[second.row][second.col]] = [board.pieces[second.row][second.col], board.pieces[first.row][first.col]]
+export const swapPieces = <T>(board: Board<T>, first: Position, second: Position): Board<T> => {
+    let copiedBoard: Board<T> = deepCopyBoard(board);
+    [copiedBoard.pieces[first.row][first.col], copiedBoard.pieces[second.row][second.col]] = [copiedBoard.pieces[second.row][second.col], copiedBoard.pieces[first.row][first.col]]
+
+    return copiedBoard;
 }
 
 export const registerMatch = <T>(matches: Match<T>[], effects: Effect<T>[]): Effect<T>[] => {
@@ -90,7 +93,7 @@ export const registerMatch = <T>(matches: Match<T>[], effects: Effect<T>[]): Eff
         effects = [...effects, {kind: "Match", match}]
     })
 
-    return effects
+    return effects;
 }
 
 export const constructAllMatchesFromBoard = <T>(board: Board<T>, matches: Match<T>[]): Match<T>[] => {
@@ -102,56 +105,67 @@ export const constructAllMatchesFromBoard = <T>(board: Board<T>, matches: Match<
         })
     })
 
-    return matches
+    return matches;
 }
 
-export const removeMatchesFromBoard = <T>(board: Board<T>, positions: Position[]): void => {
-    board.pieces.forEach((row, ir) => {
+export const removeMatchesFromBoard = <T>(board: Board<T>, positions: Position[]): Board<T> => {
+    let newBoard = deepCopyBoard(board);
+    newBoard.pieces.forEach((row, ir) => {
         row.forEach((_, ic) => {
             if (positions.some(position => position.row === ir && position.col === ic)) {
-                board.pieces[ir][ic] = undefined;
+                newBoard.pieces[ir][ic] = undefined;
             }
         })
-    })
+    });
+
+    return newBoard;
 }
 
-export const handleRefill = <T>(generator: Generator<T>, board: Board<T>): void => {
-    board.pieces[0] = board.pieces[0].map(col => {
-        if (col === undefined) {
-            col = generator.next()
-        }
+export const handleRefill = <T>(generator: Generator<T>, board: Board<T>): Board<T> => {
+    let newBoard: Board<T> = deepCopyBoard(board);
 
-        return col
-    })
+    newBoard.pieces[0] = newBoard.pieces[0].map(col => col === undefined ? generator.next() : col);
 
-    shiftTilesDown(board)
+    newBoard = shiftTilesDown(newBoard);
 
-    if (board.pieces[0].some(piece => piece === undefined)) {
-        handleRefill(generator, board)
-    }
-}
+    return newBoard.pieces[0].some(col => col === undefined) ? handleRefill(generator, newBoard) : newBoard;
+};
 
-export const shiftTilesDown = <T>(board: Board<T>): void => {
-    board.pieces.forEach((row, ir) => {
-        row.forEach((_, ic) => {
-            if (ir < board.height - 1 && board.pieces[ir][ic] !== undefined && board.pieces[ir + 1][ic] === undefined) {
-                board.pieces[ir + 1][ic] = board.pieces[ir][ic]
-                board.pieces[ir][ic] = undefined
-                shiftTilesDown(board)
+
+export const shiftTilesDown = <T>(board: Board<T>): Board<T> => {
+    let newBoard: Board<T> = deepCopyBoard(board);
+    let shifted = false;
+
+    newBoard.pieces.forEach((row, indexRow) => {
+        row.forEach((_, indexColumn) => {
+            if (indexRow < newBoard.height - 1 && newBoard.pieces[indexRow][indexColumn] !== undefined && newBoard.pieces[indexRow + 1][indexColumn] === undefined) {
+                newBoard.pieces[indexRow + 1][indexColumn] = newBoard.pieces[indexRow][indexColumn];
+                newBoard.pieces[indexRow][indexColumn] = undefined;
+                shifted = true;
             }
-        })
-    })
-}
+        });
+    });
+
+    return shifted ? shiftTilesDown(newBoard) : newBoard;
+};
+
 
 //recursive function
 export const handleCascadeEffect = <T>(generator: Generator<T>, board: Board<T>, effects: Effect<T>[]): Effect<T>[] => {
-    if (constructAllMatchesFromBoard(board, []).length) {
-        effects = registerMatch(constructAllMatchesFromBoard(board, []), effects)
-        removeMatchesFromBoard(board, constructAllMatchesFromBoard(board, []).flatMap(match => match.positions))
-        shiftTilesDown(board);
-        handleRefill(generator, board)
-        effects = handleCascadeEffect(generator, board, [...effects, {kind: "Refill", board: board}])
+    let matches = constructAllMatchesFromBoard(board, []);
+    if (matches.length > 0) {
+        let newEffects = registerMatch(matches, [...effects]);
+        let newBoard = removeMatchesFromBoard(board, matches.flatMap(match => match.positions));
+        newBoard = shiftTilesDown(newBoard);
+        newBoard = handleRefill(generator, newBoard);
+
+        return handleCascadeEffect(generator, newBoard, [...newEffects, { kind: "Refill", board: newBoard }]);
     }
 
-    return effects
+    return effects;
+};
+
+
+export const deepCopyBoard = <T>(board: Board<T>): Board<T> => {
+    return JSON.parse(JSON.stringify(board));
 }
