@@ -126,28 +126,31 @@ export const handleRefill = <T>(generator: Generator<T>, board: Board<T>): Board
 
     newBoard.pieces[0] = newBoard.pieces[0].map(col => col === undefined ? generator.next() : col);
 
-    newBoard = shiftTilesDown(newBoard);
+    newBoard = shiftTilesDown(newBoard, shiftTileDown);
 
     return newBoard.pieces[0].some(col => col === undefined) ? handleRefill(generator, newBoard) : newBoard;
 };
 
 
-export const shiftTilesDown = <T>(board: Board<T>): Board<T> => {
+export const shiftTilesDown = <T>(
+    board: Board<T>,
+    shiftTile: (board: Board<T>, row: number, col: number) => Board<T>
+): Board<T> => {
     let newBoard: Board<T> = deepCopyBoard(board);
     let shifted = false;
 
     newBoard.pieces.forEach((row, indexRow) => {
         row.forEach((_, indexColumn) => {
             if (indexRow < newBoard.height - 1 && newBoard.pieces[indexRow][indexColumn] !== undefined && newBoard.pieces[indexRow + 1][indexColumn] === undefined) {
-                newBoard.pieces[indexRow + 1][indexColumn] = newBoard.pieces[indexRow][indexColumn];
-                newBoard.pieces[indexRow][indexColumn] = undefined;
+                newBoard = shiftTile(newBoard, indexRow, indexColumn);
                 shifted = true;
             }
         });
     });
 
-    return shifted ? shiftTilesDown(newBoard) : newBoard;
+    return shifted ? shiftTilesDown(newBoard, shiftTile) : newBoard;
 };
+
 
 
 //recursive function
@@ -156,13 +159,20 @@ export const handleCascadeEffect = <T>(generator: Generator<T>, board: Board<T>,
     if (matches.length > 0) {
         let newEffects = registerMatch(matches, [...effects]);
         let newBoard = removeMatchesFromBoard(board, matches.flatMap(match => match.positions));
-        newBoard = shiftTilesDown(newBoard);
+        newBoard = shiftTilesDown(newBoard, shiftTileDown);
         newBoard = handleRefill(generator, newBoard);
 
         return handleCascadeEffect(generator, newBoard, [...newEffects, { kind: "Refill", board: newBoard }]);
     }
 
     return effects;
+};
+
+const shiftTileDown = <T>(board: Board<T>, row: number, col: number): Board<T> => {
+    let newBoard: Board<T> = deepCopyBoard(board);
+    newBoard.pieces[row + 1][col] = newBoard.pieces[row][col];
+    newBoard.pieces[row][col] = undefined;
+    return newBoard;
 };
 
 
